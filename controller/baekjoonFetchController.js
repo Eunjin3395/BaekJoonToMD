@@ -59,7 +59,13 @@ module.exports.baekjoonFetch = async (req, res) => {
                 } else if (child.name === "img") {
                   // Add image in the specific format
                   const imgUrl = $(child).attr("src");
-                  description += `\n![img.png](${imgUrl})\n`;
+                  let finalUrl = "";
+                  if (imgUrl[0] == "/") {
+                    finalUrl = "https://www.acmicpc.net" + imgUrl;
+                  } else {
+                    finalUrl = imgUrl;
+                  }
+                  description += `\n![img.png](${finalUrl})\n`;
                 }
               });
             description += "\n"; // Add new line after processing the p tag
@@ -77,16 +83,29 @@ module.exports.baekjoonFetch = async (req, res) => {
                     } else if (liChild.name === "sup") {
                       liText += `^${$(liChild).text().trim()}`;
                     } else if (liChild.name === "img") {
-                      const imgUrl = $(liChild).attr("src");
-                      liText += `![img.png](${imgUrl})`;
+                      // Add image in the specific format
+                      const imgUrl = $(child).attr("src");
+                      let finalUrl = "";
+                      if (imgUrl[0] == "/") {
+                        finalUrl = "https://www.acmicpc.net" + imgUrl;
+                      } else {
+                        finalUrl = imgUrl;
+                      }
+                      description += `\n![img.png](${finalUrl})\n`;
                     }
                   });
                 description += liText + "\n";
               });
           } else if (element.name === "img") {
             // Add image in the specific format
-            const imgUrl = $(element).attr("src");
-            description += `![img.png](${imgUrl})\n`;
+            const imgUrl = $(child).attr("src");
+            let finalUrl = "";
+            if (imgUrl[0] == "/") {
+              finalUrl = "https://www.acmicpc.net" + imgUrl;
+            } else {
+              finalUrl = imgUrl;
+            }
+            description += `\n![img.png](${finalUrl})\n`;
           }
         });
 
