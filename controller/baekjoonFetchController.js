@@ -59,14 +59,34 @@ module.exports.baekjoonFetch = async (req, res) => {
                 } else if (child.name === "img") {
                   // Add image in the specific format
                   const imgUrl = $(child).attr("src");
-                  description += `\n![img.png](https://www.acmicpc.net${imgUrl})\n`;
+                  description += `\n![img.png](${imgUrl})\n`;
                 }
               });
             description += "\n"; // Add new line after processing the p tag
+          } else if (element.name === "ul") {
+            // Process ul tag and its li children
+            $(element)
+              .children("li")
+              .each((i, li) => {
+                let liText = "- ";
+                $(li)
+                  .contents()
+                  .each((j, liChild) => {
+                    if (liChild.type === "text") {
+                      liText += $(liChild).text().trim();
+                    } else if (liChild.name === "sup") {
+                      liText += `^${$(liChild).text().trim()}`;
+                    } else if (liChild.name === "img") {
+                      const imgUrl = $(liChild).attr("src");
+                      liText += `![img.png](${imgUrl})`;
+                    }
+                  });
+                description += liText + "\n";
+              });
           } else if (element.name === "img") {
             // Add image in the specific format
             const imgUrl = $(element).attr("src");
-            description += `![img.png](https://www.acmicpc.net${imgUrl})\n`;
+            description += `![img.png](${imgUrl})\n`;
           }
         });
 
@@ -75,6 +95,7 @@ module.exports.baekjoonFetch = async (req, res) => {
 
       // Check if the limit section exists
       if ($("#limit").length > 0) {
+        console.log("there is limit");
         $("#problem_limit li").each((index, element) => {
           let liText = "";
 
@@ -101,16 +122,51 @@ module.exports.baekjoonFetch = async (req, res) => {
       // Extract the problem output
       const problemOutput = $("#problem_output").text().trim();
 
-      // Extract the sample input text and wrap it with ```
-      const sampleInput = `\`\`\`\n${$("#sample-input-1").text().trim()}\n\`\`\``;
+      // // Extract the sample input text and wrap it with ```
+      // const sampleInput = `\`\`\`\n${$("#sample-input-1").text().trim()}\n\`\`\``;
 
-      // Extract the sample output text and wrap it with ```
-      const sampleOutput = `\`\`\`\n${$("#sample-output-1").text().trim()}\n\`\`\``;
+      // // Extract the sample output text and wrap it with ```
+      // const sampleOutput = `\`\`\`\n${$("#sample-output-1").text().trim()}\n\`\`\``;
 
-      const cleanedSampleInput = sampleInput.replace(/`/g, "");
-      const cleanedSampleOutput = sampleOutput.replace(/`/g, "");
-      // Create the markdown content
-      const markdown = `
+      // const cleanedSampleInput = sampleInput.replace(/`/g, "");
+      // const cleanedSampleOutput = sampleOutput.replace(/`/g, "");
+
+      // 모든 예제 입력 및 출력 추출
+      let sampleCases = "";
+      let samepleCasesForScript = "";
+      $("section[id^=sampleinput]").each((i, inputElement) => {
+        const inputId = $(inputElement).attr("id");
+        const outputId = inputId.replace("input", "output");
+
+        const inputText = $(`#${inputId} pre`).text().trim();
+        const outputText = $(`#${outputId} pre`).text().trim();
+
+        sampleCases += `
+### 예제 입력 ${i + 1}
+\`\`\`
+${inputText}
+\`\`\`
+
+### 예제 출력 ${i + 1}
+\`\`\`
+${outputText}
+\`\`\`
+        `;
+
+        samepleCasesForScript += `
+### 예제 입력 ${i + 1}
+\\\`\\\`\\\`
+${inputText}
+\\\`\\\`\\\`
+
+### 예제 출력 ${i + 1}
+\\\`\\\`\\\`
+${outputText}
+\\\`\\\`\\\``;
+      });
+
+      // markdown 콘텐츠 생성
+      let markdown = `
 # [${problemTitle}](https://www.acmicpc.net/problem/${problemNumber})
 
 |시간 제한| 메모리 제한 |제출|정답|맞힌 사람|정답 비율|
@@ -125,13 +181,16 @@ ${problemInput}
 
 ## 출력
 ${problemOutput}
-
-### 예제 입력 1
-${sampleInput}
-
-### 예제 출력 1
-${sampleOutput}
 `;
+
+      if (limit) {
+        markdown += `
+## 제한
+${limit.trim()}
+`;
+      }
+
+      markdown += sampleCases;
 
       // Convert markdown to HTML
       const htmlContent = marked(markdown);
@@ -228,6 +287,12 @@ ${sampleOutput}
         .home-button:hover {
             background-color: #F57C00;
         }
+        img {
+        max-width: 80%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
     </style>
 </head>
 <body>
@@ -261,15 +326,11 @@ ${problemInput}
 ## 출력
 ${problemOutput}
 
-### 예제 입력 1
-\\\`\\\`\\\`
-${cleanedSampleInput}
-\\\`\\\`\\\`
+${limit ? `## 제한\n${limit.trim()}\n` : ""}
 
-### 예제 출력 1
-\\\`\\\`\\\`
-${cleanedSampleOutput}
-\\\`\\\`\\\`
+
+${samepleCasesForScript}
+
 \`;
 
             document.getElementById("copy-button").addEventListener("click", function() {
