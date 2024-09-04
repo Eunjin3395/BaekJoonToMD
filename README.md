@@ -4,7 +4,7 @@
 ---
 
 ### 서비스 url
-http://baekjoon2md.com:3000
+https://baekjoon2md.com
 
 ---
 ### 이용 방법
